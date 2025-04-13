@@ -1,0 +1,66 @@
+﻿--câu 1
+WITH MEMBER [Doanh_Thu] AS
+    SUM([THOI GIAN].[Nam].Members, [Measures].[Thanh Tien])
+MEMBER [So_Luong_Khach_Hang] AS
+	SUM([CHI NHANH].[Ma CN].CurrentMember * [KHACH HANG].[Ma KH].Members,
+        IIF([Measures].[KET QUA KINH DOANH Count] > 0,
+		1,
+		NULL))
+MEMBER [So_Luong_Phim_Chieu] AS
+	SUM([CHI NHANH].[Ma CN].CurrentMember * [PHIM].[Ma Phim].Members,
+        IIF([Measures].[KET QUA KINH DOANH Count] > 0,
+		1,
+		NULL))
+MEMBER [So_Luong_Ve] AS
+    ([Measures].[So Luong Ve])
+MEMBER [Ket_Qua_KPI] AS
+    IIF([Doanh_Thu] >= 200000000 AND
+        [So_Luong_Khach_Hang] >= 200 AND
+        [So_Luong_Phim_Chieu] >= 60 AND
+        [So_Luong_Ve] >= 1000,
+        "Đạt KPI",
+        "Không đạt")
+SELECT NON EMPTY {[Doanh_Thu],[So_Luong_Khach_Hang],[So_Luong_Phim_Chieu],[So_Luong_Ve],[Ket_Qua_KPI]} ON COLUMNS,
+NON EMPTY
+    ([CHI NHANH].[Ten Mien].children - [CHI NHANH].[Ten Mien].[Unknown],
+	 [CHI NHANH].[Ten TP].children - [CHI NHANH].[Ten TP].[Unknown],
+	 [CHI NHANH].[Ten CN].Children - [CHI NHANH].[Ten CN].[Unknown],
+     [THOI GIAN].[Nam].members - [THOI GIAN].[Nam].[Unknown]) on rows
+FROM RAPCHIEUPHIMCGV
+
+
+--câu 2
+with	
+member [So_Lan_Thanh_Toan2022] as ([THOI GIAN].[Nam].[2022],[Measures].[KET QUA KINH DOANH Count])
+member [So_Lan_Thanh_Toan2023] as ([THOI GIAN].[Nam].[2023],[Measures].[KET QUA KINH DOANH Count])
+member [Ty_Le] as ( 1 - [So_Lan_Thanh_Toan2022]/[So_Lan_Thanh_Toan2023]) , FORMAT_STRING = "percent"
+member [Danh_Gia] as 
+iif ([So_Lan_Thanh_Toan2022]/[So_Lan_Thanh_Toan2023] <= 0.75,
+"Hiệu quả",
+"Không hiệu quả")
+
+select non empty
+{[Measures].[So_Lan_Thanh_Toan2022],[Measures].[So_Lan_Thanh_Toan2023],[Ty_Le],[Danh_gia]} on columns,
+non empty
+([CHI NHANH].[Ten Mien].children - [CHI NHANH].[Ten Mien].[Unknown],
+ [CHI NHANH].[Ten CN].children,
+{[KHACH HANG].[Ten LKH].children - [KHACH HANG].[Ten LKH].[Unknown]},
+{[PHUONG THUC THANH TOAN].[Ten PTTT].children - {[PHUONG THUC THANH TOAN].[Ten PTTT].&[Thanh toán bằng tiền mặt],
+[PHUONG THUC THANH TOAN].[Ten PTTT].[Unknown]}}) on rows
+from RAPCHIEUPHIMCGV
+
+--câu 3:
+with member [Ty_Le_Phan_Tram] as
+([KHACH HANG].[Ten LKH], [Measures].[Thanh Tien])/
+([KHACH HANG].[Ten LKH].[All], [Measures].[Thanh Tien])
+, FORMAT_STRING = "percent"
+
+select 
+non empty crossjoin([KHACH HANG].[Ten LKH].members,[Ty_Le_Phan_Tram]) on columns,
+non empty 
+([THOI GIAN].[Nam].children - [THOI GIAN].[Nam].[Unknown],
+[THOI GIAN].[Quy].children - [THOI GIAN].[Quy].[Unknown], 
+[CHI NHANH].[Ten CN].children - [CHI NHANH].[Ten CN].[Unknown], 
+[LOAI VE].[Ten Loai Ve].members) on rows
+from RAPCHIEUPHIMCGV
+where ([CHI NHANH].[Ten Mien].&[Nam])
