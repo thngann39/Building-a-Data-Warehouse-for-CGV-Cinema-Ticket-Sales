@@ -61,6 +61,7 @@ Doanh nghiệp gặp khó khăn trong việc:
 - Hỗ trợ đề xuất cải thiện chiến lược kinh doanh theo khu vực
 - Cung cấp insight dựa trên dữ liệu giúp tối ưu vận hành và phân bổ nguồn lực
 
+---
 
 ## 🛠️ V. Tech Stack
 
